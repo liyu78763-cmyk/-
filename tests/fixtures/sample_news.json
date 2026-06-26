@@ -1,0 +1,29 @@
+[
+  {
+    "title": "Amazon updates FBA inbound placement fee guidance for US sellers",
+    "url": "https://sell.amazon.com/blog/fba-inbound-placement-service-fee",
+    "source_name": "Amazon",
+    "published_at": "now-6h",
+    "summary": "Amazon published updated guidance for US sellers about FBA inbound placement service fee and shipment planning.",
+    "category": "logistics",
+    "source_grade": "A"
+  },
+  {
+    "title": "CPSC announces recall of imported lithium battery chargers sold online",
+    "url": "https://www.cpsc.gov/Recalls/2026/example-imported-lithium-battery-chargers",
+    "source_name": "CPSC Recalls",
+    "published_at": "now-8h",
+    "summary": "CPSC announced a recall involving imported lithium battery chargers sold online because of fire risk.",
+    "category": "policy_compliance",
+    "source_grade": "A"
+  },
+  {
+    "title": "Old marketplace commentary without new facts",
+    "url": "https://example.com/repost/old-marketplace-commentary",
+    "source_name": "Repost Site",
+    "published_at": "now-4h",
+    "summary": "This should be filtered by blocked source keyword.",
+    "category": "market_platform",
+    "source_grade": "D"
+  }
+]

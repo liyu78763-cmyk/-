@@ -1,0 +1,90 @@
+name: Cross-border DingTalk Daily
+
+on:
+  schedule:
+    # Beijing 10:00 = UTC 02:00.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Generate report without sending DingTalk"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: crossborder-dingtalk-daily-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+      DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+      AI_MODEL: ${{ secrets.AI_MODEL }}
+      LOG_LEVEL: INFO
+      DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e ".[dev]"
+
+      - name: Restore history cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/history.sqlite
+          key: history-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            history-${{ github.ref_name }}-
+
+      - name: Run code checks
+        run: |
+          python -m ruff format --check .
+          python -m ruff check .
+          python -m mypy src
+          python -m pytest
+
+      - name: Generate and send daily briefing
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA_ARGS=""
+          if [[ "${DRY_RUN_INPUT}" == "true" ]]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+          python -m crossborder_daily ${EXTRA_ARGS} --hours 24 --max-items 10 --max-news-age-days 7 --amz123-items 5 --min-high-value-items 0 --output data/latest_report.md
+
+      - name: Upload generated report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crossborder-daily-report-${{ github.run_id }}
+          path: |
+            data/latest_report.md
+            data/history.sqlite
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Save history cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/history.sqlite
+          key: history-${{ github.ref_name }}-${{ github.run_id }}

@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Amazon fresh FBA update for US sellers",
+    "url": "https://sell.amazon.com/blog/fresh-fba-update",
+    "source_name": "Amazon",
+    "published_at": "now-10h",
+    "summary": "Amazon published a fresh FBA update for US sellers.",
+    "category": "logistics",
+    "source_grade": "A"
+  },
+  {
+    "title": "Amazon old seller forum announcement should be excluded",
+    "url": "https://sellercentral.amazon.com/seller-forums/discussions/t/old-prime-day-date",
+    "source_name": "Amazon",
+    "published_at": "now-30h",
+    "summary": "This is older than the configured max age and should be excluded.",
+    "category": "amazon_platform",
+    "source_grade": "A"
+  }
+]

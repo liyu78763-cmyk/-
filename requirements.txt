@@ -1,0 +1,5 @@
+feedparser>=6.0.11,<7
+python-dateutil>=2.9.0,<3
+PyYAML>=6.0.1,<7
+requests>=2.32.0,<3
+tzdata>=2025.2

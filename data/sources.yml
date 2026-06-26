@@ -1,0 +1,95 @@
+feeds:
+  - name: CPSC Recalls
+    url: https://www.cpsc.gov/Newsroom/CPSC-RSS-Feed/Recalls-RSS
+    grade: A
+    category: policy_compliance
+  - name: FTC News
+    url: https://www.ftc.gov/news-events/news/press-releases/rss.xml
+    grade: A
+    category: policy_compliance
+  - name: CBP Newsroom
+    url: https://www.cbp.gov/newsroom/rss
+    grade: A
+    category: policy_compliance
+  - name: USTR Press Releases
+    url: https://ustr.gov/about-us/policy-offices/press-office/press-releases/rss.xml
+    grade: A
+    category: hot
+  - name: USPS Newsroom
+    url: https://about.usps.com/newsroom/rss/news-releases.xml
+    grade: A
+    category: logistics
+
+gdelt_queries:
+  - name: amazon_policy
+    query: '"Amazon" ("Seller Central" OR "seller policy" OR "account health" OR "listing compliance")'
+    category: amazon_platform
+  - name: amazon_fba
+    query: '"Amazon" ("FBA fee" OR "fulfillment fee" OR "storage fee" OR "inbound placement" OR "returns policy")'
+    category: logistics
+  - name: amazon_ads
+    query: '"Amazon Ads" OR "Sponsored Products" OR "Sponsored Brands" OR "Amazon Marketing Cloud" OR "Amazon DSP"'
+    category: ads_traffic
+  - name: us_trade_china
+    query: '("USTR" OR "CBP" OR "Federal Register" OR tariff OR customs) (China OR ecommerce OR import)'
+    category: policy_compliance
+  - name: product_safety
+    query: '("CPSC" OR "FDA" OR "FTC") ("recall" OR "product safety" OR "import alert" OR ecommerce)'
+    category: policy_compliance
+  - name: logistics
+    query: '("USPS" OR "UPS" OR "FedEx" OR "Port of Los Angeles" OR "Port of Long Beach") (surcharge OR disruption OR shipping OR freight)'
+    category: logistics
+  - name: marketplace_competitors
+    query: '("Walmart Marketplace" OR "TikTok Shop US" OR "Temu" OR "eBay") ("seller" OR marketplace OR policy OR fee)'
+    category: market_platform
+
+amz123_briefs:
+  - name: AMZ123跨境早报
+    base_url: https://www.amz123.com/zb
+    grade: C
+    category: market_platform
+
+source_grades:
+  sellercentral.amazon.com: A
+  sell.amazon.com: A
+  ads.amazon.com: A
+  advertising.amazon.com: A
+  aboutamazon.com: A
+  amazon.com: A
+  cpsc.gov: A
+  fda.gov: A
+  ftc.gov: A
+  cbp.gov: A
+  ustr.gov: A
+  federalregister.gov: A
+  usitc.gov: A
+  usps.com: A
+  ups.com: A
+  fedex.com: A
+  walmart.com: A
+  tiktokglobalshop.com: A
+  ebay.com: A
+  reuters.com: B
+  apnews.com: B
+  cnbc.com: B
+  wsj.com: B
+  retaildive.com: B
+  supplychaindive.com: B
+  searchengineland.com: B
+  marketplacepulse.com: C
+  digitalcommerce360.com: C
+  amz123.com: C
+
+blocked_domain_keywords:
+  - training
+  - course
+  - coaching
+  - agency
+  - zhaoshang
+  - affiliate
+  - repost
+  - mirror
+  - medium.com
+  - substack.com
+  - blogspot.
+  - wordpress.

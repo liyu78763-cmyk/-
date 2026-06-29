@@ -37,6 +37,14 @@ class HistoryStore:
         self.connection.execute(
             "CREATE INDEX IF NOT EXISTS idx_sent_fp ON sent_items(event_fingerprint, sent_at)"
         )
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sent_runs (
+                run_key TEXT PRIMARY KEY,
+                sent_at TEXT NOT NULL
+            )
+            """
+        )
         self.connection.commit()
 
     def __enter__(self) -> HistoryStore:
@@ -87,8 +95,28 @@ class HistoryStore:
         )
         self.connection.commit()
 
+    def run_was_sent(self, run_key: str) -> bool:
+        cursor = self.connection.execute(
+            "SELECT 1 FROM sent_runs WHERE run_key = ? LIMIT 1",
+            (run_key,),
+        )
+        return cursor.fetchone() is not None
+
+    def record_run_sent(self, run_key: str, *, sent_at: datetime | None = None) -> None:
+        actual_sent_at = to_beijing(sent_at or now_beijing()).isoformat()
+        self.connection.execute(
+            """
+            INSERT OR IGNORE INTO sent_runs (run_key, sent_at)
+            VALUES (?, ?)
+            """,
+            (run_key, actual_sent_at),
+        )
+        self.connection.commit()
+
     def cleanup(self, *, days: int = 30) -> int:
         cutoff = to_beijing(now_beijing() - timedelta(days=days)).isoformat()
         cursor = self.connection.execute("DELETE FROM sent_items WHERE sent_at < ?", (cutoff,))
+        deleted_count = int(cursor.rowcount)
+        cursor = self.connection.execute("DELETE FROM sent_runs WHERE sent_at < ?", (cutoff,))
         self.connection.commit()
-        return int(cursor.rowcount)
+        return deleted_count + int(cursor.rowcount)

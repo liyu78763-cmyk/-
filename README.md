@@ -1,6 +1,6 @@
 # 跨境电商早报自动推送到钉钉
 
-这是一个完整可运行的 Python 3.12 项目，用于每天北京时间 10:00 在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度排序后发送 TOP10；不足 10 条时不凑数。程序会完成过滤、去重、评分和中文早报生成后，通过钉钉自定义机器人推送到群聊。
+这是一个完整可运行的 Python 3.12 项目，用于每个美国太平洋时间工作日 00:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度排序后发送 TOP10；不足 10 条时不凑数。程序会完成过滤、去重、评分和中文早报生成后，通过钉钉自定义机器人推送到群聊。
 
 ## 功能
 
@@ -67,9 +67,9 @@ python -m crossborder_daily --output data/latest_report.md
 
 - `DINGTALK_WEBHOOK`：钉钉自定义机器人 Webhook。
 - `DINGTALK_SECRET`：机器人加签密钥；未开启加签时可留空。
-- `AI_API_KEY`：OpenAI-compatible API Key。
-- `AI_BASE_URL`：OpenAI-compatible API Base URL，例如 `https://api.openai.com/v1`。
-- `AI_MODEL`：模型名称。
+- `AI_API_KEY`：OpenAI-compatible API Key；可选，未配置或无额度时会自动使用固定模板生成早报。
+- `AI_BASE_URL`：OpenAI-compatible API Base URL，例如 `https://api.openai.com/v1`；可选。
+- `AI_MODEL`：模型名称；可选。
 
 可选：
 
@@ -85,7 +85,7 @@ python -m crossborder_daily --output data/latest_report.md
 1. 将本项目提交到 GitHub 仓库。
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
-4. 工作流会在 UTC `02:00` 执行，即北京时间 `10:00`。
+4. 工作流按美国太平洋时间工作日 `00:00` 发送；夏令时 PDT 对应 UTC `07:00`，约北京时间 `15:00`，冬令时 PST 对应 UTC `08:00`，约北京时间 `16:00`。Workflow 同时配置这两个 UTC 触发点，并用 `America/Los_Angeles` 时区判断只让美国太平洋时间 00 点这一小时的运行继续，避免 GitHub 排队延迟几分钟导致漏发。
 5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行，并使用 `dry_run` 参数测试。
 
 需要配置的 GitHub Secrets：

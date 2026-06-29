@@ -84,7 +84,11 @@ def rejection_reason(
     )
     if grade == SourceGrade.D:
         return "low credibility source"
-    if is_high_risk(item) and grade not in {SourceGrade.A, SourceGrade.B}:
+    if (
+        is_high_risk(item)
+        and grade not in {SourceGrade.A, SourceGrade.B}
+        and not _is_allowed_amz123_recall(item)
+    ):
         return "high-risk news without authoritative source"
     return None
 
@@ -94,3 +98,11 @@ def is_high_risk(item: NewsItem) -> bool:
         return True
     text = f"{item.title} {item.summary} {item.content}".lower()
     return any(keyword in text for keyword in HIGH_RISK_KEYWORDS)
+
+
+def _is_allowed_amz123_recall(item: NewsItem) -> bool:
+    source_text = f"{item.source_name} {item.url}".lower()
+    if "amz123" not in source_text:
+        return False
+    item_text = f"{item.title} {item.summary} {item.content}".lower()
+    return any(keyword in item_text for keyword in ["cpsc", "recall", "召回"])

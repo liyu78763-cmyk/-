@@ -1,12 +1,12 @@
 # 跨境电商快讯自动推送到钉钉
 
-这是一个完整可运行的 Python 3.12 项目，用于每个美国太平洋时间工作日 00:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度排序后发送 TOP10；不足 10 条时不凑数。程序会完成过滤、去重、评分和中文快讯生成后，通过钉钉自定义机器人推送到群聊。
+这是一个完整可运行的 Python 3.12 项目，用于每个工作日北京时间 10:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度和来源优先级发送 TOP10；内容不足时按备用策略补位，仍不足则不硬凑。程序会完成过滤、去重、评分和中文快讯生成后，通过钉钉自定义机器人推送到群聊。
 
 ## 功能
 
 - 默认覆盖 Amazon 美国站、FBA、Amazon Ads、CPSC/FDA/FTC/CBP/USTR、USPS/UPS/FedEx、Walmart Marketplace、TikTok Shop US、Temu、eBay 等主题。
 - 默认数据源包括官方 RSS 与 GDELT 新闻搜索；新闻搜索层通过 `NewsProvider` 接口可替换。
-- 已接入 AMZ123 跨境早报作为 C 级行业线索来源，仅补充亚马逊相关新闻，并按 AMZ123 页面原始顺序输出；每期固定取 5 条 AMZ123，有多少取多少。政策、费用、召回、合规等高风险事项仍应优先核验官方原文。
+- 已接入 AMZ123 跨境早报作为 C 级行业线索来源，优先补充亚马逊和北美相关内容；CPSC/召回类 AMZ123 内容允许进入快讯但仍显示 AMZ123 来源，官方 CPSC 来源抓到时优先级更高。
 - 使用 SQLite 保存已推送 URL 与事件指纹，7 天内不重复推送，30 天后自动清理。
 - 即使搜索窗口被调宽，超过 7 天的新闻也会被过滤。
 - 支持钉钉机器人加签。
@@ -85,7 +85,7 @@ python -m crossborder_daily --output data/latest_report.md
 1. 将本项目提交到 GitHub 仓库。
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
-4. 工作流按美国太平洋时间工作日 `00:00` 这一小时发送；夏令时 PDT 对应 UTC `07:00-07:59`，约北京时间 `15:00-15:59`，冬令时 PST 对应 UTC `08:00-08:59`，约北京时间 `16:00-16:59`。Workflow 在这一小时内每 10 分钟补偿尝试一次，并用当天 `run-key` 防止重复发送，降低 GitHub 整点定时延迟或漏触发的影响。
+4. 工作流按工作日北京时间 `10:00` 发送；对应 GitHub Actions cron 的 UTC `02:00`。GitHub Actions 可能会有几分钟排队延迟，但会按当天 `run-key` 防止重复发送。
 5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行；`dry_run=false` 会真实发送，`dry_run=true` 只生成报告不发送。
 
 需要配置的 GitHub Secrets：
@@ -127,7 +127,7 @@ python -m crossborder_daily --dry-run --fixture tests/fixtures/sample_news.json 
 - `DINGTALK_WEBHOOK is required`：未设置 Webhook，或当前不是 `--dry-run`。
 - `DingTalk returned error`：检查机器人是否被删除、Webhook 是否正确、关键词/加签安全策略是否匹配。
 - `AI request failed`：检查 `AI_BASE_URL` 是否包含 `/v1`、模型名是否可用、API Key 是否有效。
-- 快讯新闻少：默认只保留最近 24 小时内通过核验的 TOP10；超过 7 天的旧闻会被过滤，不足 10 条时不会凑数。
+- 快讯新闻少：默认只保留最近 24 小时内通过核验的 TOP10；超过 7 天的旧闻会被过滤，AMZ123 会按备用优先级补位，仍不足时不会硬凑无关内容。
 - GitHub Actions 没有发送：检查手动触发是否开启了 `dry_run`，以及 Secrets 是否完整。
 
 ## 项目结构

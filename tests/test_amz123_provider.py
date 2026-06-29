@@ -15,6 +15,7 @@ def test_parse_amz123_headlines_keeps_relevant_article_links() -> None:
         "26年加拿大Prime Day总消费将达54亿加元，购物意愿提升",
         "亚马逊MFN备货时间新规6月29日生效，严禁虚报时效",
         "亚马逊自有品牌Amazon Basics进军巴西市场",
+        "存窒息风险，美国CPSC紧急召回超7万件牙胶玩具",
     ]
-    assert [headline.relevance_priority for headline in headlines] == [1, 1, 1, 2]
+    assert [headline.relevance_priority for headline in headlines] == [1, 1, 1, 2, 3]
     assert all(headline.url.startswith("https://www.amz123.com/") for headline in headlines)

@@ -86,7 +86,7 @@ python -m crossborder_daily --output data/latest_report.md
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
 4. 工作流按美国太平洋时间工作日 `00:00` 这一小时发送；夏令时 PDT 对应 UTC `07:00-07:59`，约北京时间 `15:00-15:59`，冬令时 PST 对应 UTC `08:00-08:59`，约北京时间 `16:00-16:59`。Workflow 在这一小时内每 10 分钟补偿尝试一次，并用当天 `run-key` 防止重复发送，降低 GitHub 整点定时延迟或漏触发的影响。
-5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行，并使用 `dry_run` 参数测试。
+5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行；`dry_run=false` 会真实发送，`dry_run=true` 只生成报告不发送。
 
 需要配置的 GitHub Secrets：
 

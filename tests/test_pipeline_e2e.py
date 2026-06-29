@@ -3,6 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from crossborder_daily.config import RuntimePaths
 from crossborder_daily.pipeline import RunOptions, run_pipeline
 
@@ -59,3 +61,53 @@ def test_pipeline_rejects_news_older_than_max_age(tmp_path: Path) -> None:
 
     assert "fresh FBA update" in result.report
     assert "old seller forum announcement" not in result.report
+
+
+def test_pipeline_does_not_send_empty_report_after_history_dedupe(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths = RuntimePaths(
+        sources_path=Path("data/sources.yml"),
+        history_path=tmp_path / "history.sqlite",
+        prompt_path=Path("prompts/daily_report.md"),
+        output_path=tmp_path / "latest_report.md",
+    )
+    send_calls: list[str] = []
+
+    def fake_send_markdown(self: object, *, title: str, text: str) -> int:
+        send_calls.append(text)
+        return 1
+
+    monkeypatch.setenv("DINGTALK_WEBHOOK", "https://oapi.dingtalk.com/robot/send?access_token=test")
+    monkeypatch.setenv("DINGTALK_SECRET", "SECtest")
+    monkeypatch.setattr(
+        "crossborder_daily.dingtalk.DingTalkClient.send_markdown",
+        fake_send_markdown,
+    )
+
+    first = run_pipeline(
+        RunOptions(
+            paths=paths,
+            dry_run=False,
+            fixture_path=Path("tests/fixtures/sample_news.json"),
+            use_ai=False,
+            min_high_value_items=1,
+        )
+    )
+
+    second = run_pipeline(
+        RunOptions(
+            paths=paths,
+            dry_run=False,
+            fixture_path=Path("tests/fixtures/sample_news.json"),
+            use_ai=False,
+            min_high_value_items=1,
+        )
+    )
+
+    assert first.sent
+    assert not second.sent
+    assert second.sent_chunks == 0
+    assert second.selected_count == 0
+    assert len(send_calls) == 1

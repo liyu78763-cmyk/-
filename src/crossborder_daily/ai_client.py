@@ -100,7 +100,7 @@ def maybe_polish_report(
 
 
 def _polished_report_is_safe(report: str, facts: dict[str, Any]) -> bool:
-    if "跨境早报" not in report:
+    if "跨境快讯" not in report:
         return False
     urls = [str(item["url"]) for item in cast(list[dict[str, Any]], facts.get("items", []))]
     return all(url in report for url in urls)

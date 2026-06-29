@@ -15,8 +15,54 @@ AMZ123_AMAZON_KEYWORDS = [
     "prime",
     "fba",
     "mfn",
-    "seller",
+    "seller central",
+    "asin",
     "亚马逊",
+    "美国站",
+]
+
+AMZ123_OTHER_PLATFORM_KEYWORDS = [
+    "ebay",
+    "lazada",
+    "shopee",
+    "shein",
+    "temu",
+    "tiktok",
+    "walmart",
+    "独立站",
+    "速卖通",
+]
+
+AMZ123_NON_NORTH_AMERICA_KEYWORDS = [
+    "eu",
+    "uk",
+    "巴西",
+    "德国",
+    "东南亚",
+    "俄罗斯",
+    "法国",
+    "菲律宾",
+    "韩国",
+    "荷兰",
+    "拉美",
+    "拉丁美洲",
+    "马来西亚",
+    "美国以外",
+    "墨西哥以外",
+    "南非",
+    "欧盟",
+    "欧洲",
+    "日本",
+    "沙特",
+    "泰国",
+    "土耳其",
+    "西班牙",
+    "新加坡",
+    "意大利",
+    "印度",
+    "印尼",
+    "英国",
+    "越南",
 ]
 
 
@@ -122,6 +168,10 @@ def _is_amz123_article_url(url: str) -> bool:
 
 def _is_relevant_title(title: str) -> bool:
     lowered = title.lower()
+    if any(keyword.lower() in lowered for keyword in AMZ123_OTHER_PLATFORM_KEYWORDS):
+        return False
+    if any(keyword.lower() in lowered for keyword in AMZ123_NON_NORTH_AMERICA_KEYWORDS):
+        return False
     return any(keyword.lower() in lowered for keyword in AMZ123_AMAZON_KEYWORDS)
 
 

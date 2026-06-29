@@ -1,6 +1,6 @@
-# 跨境电商早报自动推送到钉钉
+# 跨境电商快讯自动推送到钉钉
 
-这是一个完整可运行的 Python 3.12 项目，用于每个美国太平洋时间工作日 00:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度排序后发送 TOP10；不足 10 条时不凑数。程序会完成过滤、去重、评分和中文早报生成后，通过钉钉自定义机器人推送到群聊。
+这是一个完整可运行的 Python 3.12 项目，用于每个美国太平洋时间工作日 00:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度排序后发送 TOP10；不足 10 条时不凑数。程序会完成过滤、去重、评分和中文快讯生成后，通过钉钉自定义机器人推送到群聊。
 
 ## 功能
 
@@ -11,7 +11,7 @@
 - 即使搜索窗口被调宽，超过 7 天的新闻也会被过滤。
 - 支持钉钉机器人加签。
 - 长消息会按安全长度拆分。
-- 支持 dry-run，本地或 Actions 手动运行时可只生成早报不发送。
+- 支持 dry-run，本地或 Actions 手动运行时可只生成快讯不发送。
 - 单一新闻源失败不会导致整个任务失败。
 - 请求均设置超时，并带指数退避重试。
 - 日志会遮蔽 Webhook、签名密钥与 API Key。
@@ -43,7 +43,7 @@ $env:AI_MODEL="gpt-4.1-mini"
 
 ## 本地运行
 
-只生成早报，不发送钉钉：
+只生成快讯，不发送钉钉：
 
 ```bash
 python -m crossborder_daily --dry-run --output data/latest_report.md
@@ -67,7 +67,7 @@ python -m crossborder_daily --output data/latest_report.md
 
 - `DINGTALK_WEBHOOK`：钉钉自定义机器人 Webhook。
 - `DINGTALK_SECRET`：机器人加签密钥；未开启加签时可留空。
-- `AI_API_KEY`：OpenAI-compatible API Key；可选，未配置或无额度时会自动使用固定模板生成早报。
+- `AI_API_KEY`：OpenAI-compatible API Key；可选，未配置或无额度时会自动使用固定模板生成快讯。
 - `AI_BASE_URL`：OpenAI-compatible API Base URL，例如 `https://api.openai.com/v1`；可选。
 - `AI_MODEL`：模型名称；可选。
 
@@ -78,14 +78,14 @@ python -m crossborder_daily --output data/latest_report.md
 - `MAX_NEWS_AGE_DAYS`：新闻最大年龄，默认 `7` 天。
 - `LOG_LEVEL`：默认 `INFO`。
 
-如果需要接入 SerpAPI、Bing News Search、Google Programmable Search、企业内部新闻服务或其他行业早报站，请新增实现 `src/crossborder_daily/sources/base.py` 中的 `NewsProvider` 接口，并在 `src/crossborder_daily/sources/registry.py` 注册。新增密钥也必须通过 GitHub Secrets 或本地环境变量注入。
+如果需要接入 SerpAPI、Bing News Search、Google Programmable Search、企业内部新闻服务或其他行业资讯站，请新增实现 `src/crossborder_daily/sources/base.py` 中的 `NewsProvider` 接口，并在 `src/crossborder_daily/sources/registry.py` 注册。新增密钥也必须通过 GitHub Secrets 或本地环境变量注入。
 
 ## GitHub 部署
 
 1. 将本项目提交到 GitHub 仓库。
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
-4. 工作流按美国太平洋时间工作日 `00:00` 发送；夏令时 PDT 对应 UTC `07:00`，约北京时间 `15:00`，冬令时 PST 对应 UTC `08:00`，约北京时间 `16:00`。Workflow 同时配置这两个 UTC 触发点，并用 `America/Los_Angeles` 时区判断只让美国太平洋时间 00 点这一小时的运行继续，避免 GitHub 排队延迟几分钟导致漏发。
+4. 工作流按美国太平洋时间工作日 `00:00` 这一小时发送；夏令时 PDT 对应 UTC `07:00-07:59`，约北京时间 `15:00-15:59`，冬令时 PST 对应 UTC `08:00-08:59`，约北京时间 `16:00-16:59`。Workflow 在这一小时内每 10 分钟补偿尝试一次，并用当天 `run-key` 防止重复发送，降低 GitHub 整点定时延迟或漏触发的影响。
 5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行，并使用 `dry_run` 参数测试。
 
 需要配置的 GitHub Secrets：
@@ -105,7 +105,7 @@ python -m crossborder_daily --output data/latest_report.md
 3. 安全设置建议启用「加签」。
 4. 复制 Webhook 到 `DINGTALK_WEBHOOK`。
 5. 复制加签密钥到 `DINGTALK_SECRET`。
-6. 先用 GitHub Actions 的 `dry_run=true` 或本地 `--dry-run` 检查早报内容，再关闭 dry-run 真实发送。
+6. 先用 GitHub Actions 的 `dry_run=true` 或本地 `--dry-run` 检查快讯内容，再关闭 dry-run 真实发送。
 
 ## 手动测试
 
@@ -127,7 +127,7 @@ python -m crossborder_daily --dry-run --fixture tests/fixtures/sample_news.json 
 - `DINGTALK_WEBHOOK is required`：未设置 Webhook，或当前不是 `--dry-run`。
 - `DingTalk returned error`：检查机器人是否被删除、Webhook 是否正确、关键词/加签安全策略是否匹配。
 - `AI request failed`：检查 `AI_BASE_URL` 是否包含 `/v1`、模型名是否可用、API Key 是否有效。
-- 早报新闻少：默认只保留最近 24 小时内通过核验的 TOP10；超过 7 天的旧闻会被过滤，不足 10 条时不会凑数。
+- 快讯新闻少：默认只保留最近 24 小时内通过核验的 TOP10；超过 7 天的旧闻会被过滤，不足 10 条时不会凑数。
 - GitHub Actions 没有发送：检查手动触发是否开启了 `dry_run`，以及 Secrets 是否完整。
 
 ## 项目结构
@@ -136,6 +136,6 @@ python -m crossborder_daily --dry-run --fixture tests/fixtures/sample_news.json 
 src/                    Python 源码
 tests/                  单元测试和 dry-run 端到端测试
 data/                   运行时历史库和数据源配置
-prompts/                早报提示词
+prompts/                快讯提示词
 .github/workflows/      GitHub Actions 定时任务
 ```

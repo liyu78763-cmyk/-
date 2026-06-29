@@ -2,11 +2,8 @@ name: Cross-border DingTalk Daily
 
 on:
   schedule:
-    # Amazon US/Pacific weekday 00:00 hour.
-    # PDT midnight hour = UTC 07:00-07:59; PST midnight hour = UTC 08:00-08:59.
-    # The guard step below lets only the real America/Los_Angeles midnight hour continue,
-    # and the run-key prevents duplicate sends when fallback attempts also run.
-    - cron: "0,10,20,30,40,50 7,8 * * 1-5"
+    # Beijing weekday 10:00. Beijing time is UTC+8 year-round, so 10:00 BJT = 02:00 UTC.
+    - cron: "0 2 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -35,7 +32,7 @@ jobs:
       LOG_LEVEL: INFO
       DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
     steps:
-      - name: Check Pacific midnight schedule
+      - name: Check Beijing weekday schedule
         shell: bash
         run: |
           set -euo pipefail
@@ -45,18 +42,17 @@ jobs:
             exit 0
           fi
 
-          PACIFIC_HOUR="$(TZ=America/Los_Angeles date +'%H')"
-          PACIFIC_MINUTE="$(TZ=America/Los_Angeles date +'%M')"
-          PACIFIC_DAY="$(TZ=America/Los_Angeles date +'%u')"
-          PACIFIC_DATE="$(TZ=America/Los_Angeles date +'%Y-%m-%d')"
-          echo "America/Los_Angeles time: ${PACIFIC_HOUR}:${PACIFIC_MINUTE}, weekday: ${PACIFIC_DAY}"
+          BEIJING_TIME="$(TZ=Asia/Shanghai date +'%H:%M')"
+          BEIJING_DAY="$(TZ=Asia/Shanghai date +'%u')"
+          BEIJING_DATE="$(TZ=Asia/Shanghai date +'%Y-%m-%d')"
+          echo "Asia/Shanghai time: ${BEIJING_TIME}, weekday: ${BEIJING_DAY}"
 
-          if [[ "${PACIFIC_HOUR}" == "00" && "${PACIFIC_DAY}" -ge 1 && "${PACIFIC_DAY}" -le 5 ]]; then
+          if [[ "${BEIJING_DAY}" -ge 1 && "${BEIJING_DAY}" -le 5 ]]; then
             echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
-            echo "BRIEFING_RUN_KEY=amazon-us-${PACIFIC_DATE}" >> "$GITHUB_ENV"
+            echo "BRIEFING_RUN_KEY=bjt-${BEIJING_DATE}" >> "$GITHUB_ENV"
           else
             echo "RUN_BRIEFING=false" >> "$GITHUB_ENV"
-            echo "Not Pacific weekday midnight hour; skipping send."
+            echo "Not a Beijing weekday; skipping send."
           fi
 
       - name: Checkout

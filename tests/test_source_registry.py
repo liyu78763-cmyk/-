@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from crossborder_daily.models import Category, SourceGrade
 from crossborder_daily.source_config import FeedConfig, SourceRules
@@ -24,6 +25,22 @@ class FakeHttpClient:
   </channel>
 </rss>
 """
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json_body: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> FakeResponse:
+        return FakeResponse()
+
+
+class FakeResponse:
+    def json(self) -> list[dict[str, str]]:
+        return []
 
 
 def test_one_failed_rss_feed_does_not_skip_other_rss_feeds() -> None:

@@ -127,7 +127,75 @@ def test_report_selection_keeps_amazon_then_five_amz123_then_cpsc(tmp_path: Path
 
     selected = _select_report_items(ranked, options=options)
 
-    assert len(selected) == 7
+    assert len(selected) == 8
     assert selected[0].item.source_name == "Amazon"
     assert [item.item.source_name for item in selected[1:6]] == ["AMZ123跨境早报"] * 5
     assert selected[6].item.source_name == "CPSC"
+    assert selected[7].item.source_name == "AMZ123跨境早报"
+
+
+def test_report_selection_uses_relaxed_amz123_to_fill_ten(tmp_path: Path) -> None:
+    now = bjt()
+    amazon = score_and_filter(
+        [
+            news_item(
+                title="Amazon official update",
+                url="https://www.aboutamazon.com/news/update",
+                source_name="Amazon",
+                category=Category.AMAZON_PLATFORM,
+            )
+        ],
+        now=now,
+        minimum_score=0,
+    )
+    amz123_items = []
+    for index in range(2):
+        item = news_item(
+            title=f"AMZ123 strict Amazon US headline {index}",
+            url=f"https://www.amz123.com/t/strict-{index}",
+            source_name="AMZ123跨境早报",
+            category=Category.AMAZON_PLATFORM,
+        )
+        item.metadata["source_order"] = str(index + 1)
+        item.metadata["amz123_relevance_priority"] = "1"
+        amz123_items.append(item)
+    for index in range(7):
+        item = news_item(
+            title=f"AMZ123 relaxed Amazon global headline {index}",
+            url=f"https://www.amz123.com/t/relaxed-{index}",
+            source_name="AMZ123跨境早报",
+            category=Category.AMAZON_PLATFORM,
+        )
+        item.metadata["source_order"] = str(index + 3)
+        item.metadata["amz123_relevance_priority"] = "2"
+        amz123_items.append(item)
+    cpsc = news_item(
+        title="CPSC recall",
+        url="https://www.cpsc.gov/Recalls/2026/example",
+        source_name="CPSC",
+        category=Category.POLICY_COMPLIANCE,
+    )
+    ranked = [
+        *amazon,
+        *score_and_filter(amz123_items, now=now, minimum_score=0),
+        *score_and_filter([cpsc], now=now, minimum_score=0),
+    ]
+    options = RunOptions(
+        paths=RuntimePaths(
+            sources_path=tmp_path / "sources.yml",
+            history_path=tmp_path / "history.sqlite",
+            prompt_path=tmp_path / "prompt.md",
+            output_path=tmp_path / "report.md",
+        ),
+        dry_run=True,
+        max_items=10,
+        amz123_items=5,
+    )
+
+    selected = _select_report_items(ranked, options=options)
+
+    assert len(selected) == 10
+    assert selected[0].item.source_name == "Amazon"
+    assert [item.item.source_name for item in selected[1:6]] == ["AMZ123跨境早报"] * 5
+    assert selected[6].item.source_name == "CPSC"
+    assert [item.item.source_name for item in selected[7:]] == ["AMZ123跨境早报"] * 3

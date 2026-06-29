@@ -102,7 +102,7 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
     options.paths.output_path.write_text(report, encoding="utf-8")
 
     sent_chunks = 0
-    if not options.dry_run:
+    if not options.dry_run and selected:
         client = DingTalkClient(dingtalk_config_from_env(), http_client)
         sent_chunks = client.send_markdown(title=report_title(generated_at), text=report)
         with HistoryStore(options.paths.history_path) as history:
@@ -117,7 +117,7 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
     return PipelineResult(
         report=report,
         report_path=options.paths.output_path,
-        sent=not options.dry_run,
+        sent=not options.dry_run and bool(selected),
         sent_chunks=sent_chunks,
         selected_count=len(selected),
         window_hours=window_hours,
@@ -203,16 +203,42 @@ def _collect_and_score(
 
 def _select_report_items(items: list[ScoredNews], *, options: RunOptions) -> list[ScoredNews]:
     amazon_items = [item for item in items if _source_bucket(item) == "amazon"]
-    amz123_items = [item for item in items if _source_bucket(item) == "amz123"]
+    amz123_primary_items = [
+        item
+        for item in items
+        if _source_bucket(item) == "amz123" and _amz123_relevance_priority(item) == 1
+    ]
+    amz123_fallback_items = [
+        item
+        for item in items
+        if _source_bucket(item) == "amz123" and _amz123_relevance_priority(item) > 1
+    ]
     cpsc_items = [item for item in items if _source_bucket(item) == "cpsc"]
 
-    amz123_selected = amz123_items[: options.amz123_items]
-    remaining_slots = options.max_items - len(amazon_items) - len(amz123_selected)
     if options.max_items <= 0:
-        return [*amazon_items, *amz123_selected, *cpsc_items]
-    if remaining_slots <= 0:
-        return [*amazon_items, *amz123_selected]
-    return [*amazon_items, *amz123_selected, *cpsc_items[:remaining_slots]]
+        return [*amazon_items, *amz123_primary_items, *amz123_fallback_items, *cpsc_items]
+
+    selected: list[ScoredNews] = [*amazon_items]
+    amz123_minimum = _take_until(
+        [*amz123_primary_items, *amz123_fallback_items],
+        limit=options.amz123_items,
+    )
+    selected.extend(amz123_minimum)
+
+    remaining_slots = options.max_items - len(selected)
+    if remaining_slots > 0:
+        selected.extend(cpsc_items[:remaining_slots])
+
+    remaining_slots = options.max_items - len(selected)
+    if remaining_slots > 0:
+        already_selected = {item.item.url for item in selected}
+        more_amz123 = [
+            item
+            for item in [*amz123_primary_items, *amz123_fallback_items]
+            if item.item.url not in already_selected
+        ]
+        selected.extend(more_amz123[:remaining_slots])
+    return selected
 
 
 def _source_bucket(scored: ScoredNews) -> str:
@@ -224,6 +250,19 @@ def _source_bucket(scored: ScoredNews) -> str:
     if "cpsc" in text:
         return "cpsc"
     return "other"
+
+
+def _amz123_relevance_priority(scored: ScoredNews) -> int:
+    try:
+        return int(scored.item.metadata.get("amz123_relevance_priority", "1"))
+    except ValueError:
+        return 1
+
+
+def _take_until(items: list[ScoredNews], *, limit: int) -> list[ScoredNews]:
+    if limit <= 0:
+        return []
+    return items[:limit]
 
 
 def _facts_payload(items: list[ScoredNews], metadata: ReportMetadata) -> dict[str, Any]:

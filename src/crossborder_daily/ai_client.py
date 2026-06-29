@@ -39,7 +39,7 @@ class OpenAICompatibleClient:
                 {
                     "role": "user",
                     "content": (
-                        "请在不新增事实、不删除链接的前提下润色以下早报草稿。"
+                        "请在不新增事实、不删除链接的前提下润色以下快讯草稿。"
                         "若草稿已经符合格式，尽量少改。\n\n"
                         f"事实JSON：{json.dumps(facts, ensure_ascii=False)}\n\n"
                         f"草稿：\n{draft}"

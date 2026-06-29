@@ -10,10 +10,10 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Generate report without sending DingTalk"
+        description: "true = preview only, false = send DingTalk"
         required: true
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: crossborder-dingtalk-daily-${{ github.ref }}

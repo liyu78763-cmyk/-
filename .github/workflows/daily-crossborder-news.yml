@@ -2,8 +2,8 @@ name: Cross-border DingTalk Daily
 
 on:
   schedule:
-    # Beijing 10:00 = UTC 02:00.
-    - cron: "0 2 * * *"
+    # Weekdays Beijing 10:00 = UTC 02:00, Monday-Friday.
+    - cron: "0 2 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:

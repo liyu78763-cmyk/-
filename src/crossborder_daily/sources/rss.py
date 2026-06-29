@@ -18,6 +18,8 @@ class RssFeedProvider:
     def __init__(self, feeds: list[FeedConfig], http_client: HttpClient) -> None:
         self.feeds = feeds
         self.http_client = http_client
+        if len(feeds) == 1:
+            self.name = f"rss: {feeds[0].name}"
 
     def fetch(self, since: datetime, until: datetime) -> list[NewsItem]:
         items: list[NewsItem] = []

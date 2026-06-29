@@ -28,7 +28,7 @@ def test_dry_run_end_to_end_does_not_send_or_record_history(tmp_path: Path) -> N
     assert result.sent_chunks == 0
     assert result.selected_count >= 1
     assert result.report_path.exists()
-    assert "跨境早报" in result.report
+    assert "跨境快讯" in result.report
     assert "来源：" in result.report
     assert "查看原文" in result.report
     assert "事件：" not in result.report

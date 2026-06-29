@@ -2,11 +2,11 @@ name: Cross-border DingTalk Daily
 
 on:
   schedule:
-    # Amazon US/Pacific weekday 00:00.
-    # PDT midnight = UTC 07:00; PST midnight = UTC 08:00.
+    # Amazon US/Pacific weekday 00:00 hour.
+    # PDT midnight hour = UTC 07:00-07:59; PST midnight hour = UTC 08:00-08:59.
     # The guard step below lets only the real America/Los_Angeles midnight hour continue,
-    # so queued schedule delays do not miss the send.
-    - cron: "0 7,8 * * 1-5"
+    # and the run-key prevents duplicate sends when fallback attempts also run.
+    - cron: "0,10,20,30,40,50 7,8 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -48,10 +48,12 @@ jobs:
           PACIFIC_HOUR="$(TZ=America/Los_Angeles date +'%H')"
           PACIFIC_MINUTE="$(TZ=America/Los_Angeles date +'%M')"
           PACIFIC_DAY="$(TZ=America/Los_Angeles date +'%u')"
+          PACIFIC_DATE="$(TZ=America/Los_Angeles date +'%Y-%m-%d')"
           echo "America/Los_Angeles time: ${PACIFIC_HOUR}:${PACIFIC_MINUTE}, weekday: ${PACIFIC_DAY}"
 
           if [[ "${PACIFIC_HOUR}" == "00" && "${PACIFIC_DAY}" -ge 1 && "${PACIFIC_DAY}" -le 5 ]]; then
             echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
+            echo "BRIEFING_RUN_KEY=amazon-us-${PACIFIC_DATE}" >> "$GITHUB_ENV"
           else
             echo "RUN_BRIEFING=false" >> "$GITHUB_ENV"
             echo "Not Pacific weekday midnight hour; skipping send."
@@ -96,11 +98,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          EXTRA_ARGS=""
+          EXTRA_ARGS=()
           if [[ "${DRY_RUN_INPUT}" == "true" ]]; then
-            EXTRA_ARGS="--dry-run"
+            EXTRA_ARGS+=("--dry-run")
           fi
-          python -m crossborder_daily ${EXTRA_ARGS} --hours 24 --max-items 10 --max-news-age-days 7 --amz123-items 5 --min-high-value-items 0 --output data/latest_report.md
+          if [[ -n "${BRIEFING_RUN_KEY:-}" ]]; then
+            EXTRA_ARGS+=("--run-key" "${BRIEFING_RUN_KEY}")
+          fi
+          python -m crossborder_daily "${EXTRA_ARGS[@]}" --hours 24 --max-items 10 --max-news-age-days 7 --amz123-items 5 --min-high-value-items 0 --output data/latest_report.md
 
       - name: Upload generated report
         if: always() && env.RUN_BRIEFING == 'true'

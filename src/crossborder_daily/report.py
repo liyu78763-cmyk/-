@@ -32,7 +32,7 @@ class ReportMetadata:
 def format_daily_report(items: list[ScoredNews], metadata: ReportMetadata) -> str:
     title_date = _compact_title_date(metadata.generated_at)
     lines: list[str] = [
-        f"跨境早报｜{title_date}",
+        f"跨境快讯｜{title_date}",
         "",
     ]
     if not items:
@@ -136,4 +136,4 @@ def _source_label(source_name: str) -> str:
 
 def report_title(generated_at: datetime) -> str:
     value = to_beijing(generated_at)
-    return f"跨境早报 {value:%Y-%m-%d}"
+    return f"跨境快讯 {value:%Y-%m-%d}"

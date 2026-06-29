@@ -35,6 +35,7 @@ class RunOptions:
     min_high_value_items: int = 0
     use_ai: bool = True
     fixture_path: Path | None = None
+    run_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +54,24 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
     http_client = HttpClient()
     rules = load_source_rules(options.paths.sources_path)
     generated_at = now_beijing()
+
+    if not options.dry_run and options.run_key:
+        with HistoryStore(options.paths.history_path) as history:
+            if history.run_was_sent(options.run_key):
+                report = _skip_report(generated_at, options.run_key)
+                options.paths.output_path.parent.mkdir(parents=True, exist_ok=True)
+                options.paths.output_path.write_text(report, encoding="utf-8")
+                history.cleanup(days=30)
+                return PipelineResult(
+                    report=report,
+                    report_path=options.paths.output_path,
+                    sent=False,
+                    sent_chunks=0,
+                    selected_count=0,
+                    window_hours=options.hours,
+                    rejected_count=0,
+                    provider_errors=[],
+                )
 
     selected, rejected, provider_errors, window_hours = _collect_selecting_window(
         rules=rules,
@@ -88,6 +107,8 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
         sent_chunks = client.send_markdown(title=report_title(generated_at), text=report)
         with HistoryStore(options.paths.history_path) as history:
             history.record_sent(selected, sent_at=generated_at)
+            if options.run_key:
+                history.record_run_sent(options.run_key, sent_at=generated_at)
             history.cleanup(days=30)
     else:
         with HistoryStore(options.paths.history_path) as history:
@@ -102,6 +123,14 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
         window_hours=window_hours,
         rejected_count=len(rejected),
         provider_errors=provider_errors,
+    )
+
+
+def _skip_report(generated_at: datetime, run_key: str) -> str:
+    return (
+        f"{report_title(generated_at)}\n\n"
+        f"本时段已经成功发送过快讯，本次自动跳过，避免重复推送。\n"
+        f"运行标识：{run_key}\n"
     )
 
 

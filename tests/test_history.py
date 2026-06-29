@@ -14,3 +14,10 @@ def test_history_blocks_recently_sent_url(tmp_path: Path) -> None:
         assert not history.seen_recent(scored, days=7)
         history.record_sent([scored], sent_at=bjt())
         assert history.seen_recent(scored, days=7)
+
+
+def test_history_records_once_only_run_key(tmp_path: Path) -> None:
+    with HistoryStore(tmp_path / "history.sqlite") as history:
+        assert not history.run_was_sent("amazon-us-2026-06-29")
+        history.record_run_sent("amazon-us-2026-06-29", sent_at=bjt())
+        assert history.run_was_sent("amazon-us-2026-06-29")

@@ -20,8 +20,8 @@ def build_providers(
     if fixture_path is not None:
         return [FixtureNewsProvider(fixture_path)]
     providers: list[NewsProvider] = []
-    if rules.feeds:
-        providers.append(RssFeedProvider(rules.feeds, http_client))
+    for feed in rules.feeds:
+        providers.append(RssFeedProvider([feed], http_client))
     if rules.gdelt_queries:
         providers.append(GdeltNewsProvider(rules.gdelt_queries, rules, http_client))
     if rules.amz123_briefs:

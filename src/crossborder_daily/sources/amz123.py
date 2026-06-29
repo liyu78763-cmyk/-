@@ -26,10 +26,13 @@ AMZ123_OTHER_PLATFORM_KEYWORDS = [
     "lazada",
     "shopee",
     "shein",
+    "target",
     "temu",
     "tiktok",
     "walmart",
+    "whatnot",
     "独立站",
+    "沃尔玛",
     "速卖通",
 ]
 
@@ -65,11 +68,60 @@ AMZ123_NON_NORTH_AMERICA_KEYWORDS = [
     "越南",
 ]
 
+AMZ123_NORTH_AMERICA_KEYWORDS = [
+    "canada",
+    "fedex",
+    "mexico",
+    "north america",
+    "u.s.",
+    "ups",
+    "usa",
+    "usps",
+    "北美",
+    "加拿大",
+    "独立日",
+    "美国",
+    "美国站",
+    "墨西哥",
+]
+
+AMZ123_US_PLATFORM_KEYWORDS = [
+    "target",
+    "walmart",
+    "whatnot",
+    "沃尔玛",
+]
+
+AMZ123_LOGISTICS_COMPLIANCE_KEYWORDS = [
+    "cbp",
+    "cpsc",
+    "customs",
+    "fba",
+    "fda",
+    "fedex",
+    "ftc",
+    "recall",
+    "tariff",
+    "ups",
+    "usps",
+    "仓储",
+    "关税",
+    "港口",
+    "合规",
+    "海关",
+    "空运",
+    "物流",
+    "配送",
+    "入库",
+    "召回",
+]
+
 
 @dataclass(frozen=True, slots=True)
 class Amz123Headline:
     title: str
     url: str
+    relevance_priority: int
 
 
 class Amz123BriefProvider:
@@ -98,7 +150,10 @@ class Amz123BriefProvider:
                             summary=headline.title,
                             category=_category_from_title(headline.title, config.category),
                             source_grade=config.grade,
-                            metadata={"source_order": str(index)},
+                            metadata={
+                                "source_order": str(index),
+                                "amz123_relevance_priority": str(headline.relevance_priority),
+                            },
                         )
                     )
         return items
@@ -107,18 +162,21 @@ class Amz123BriefProvider:
 def parse_amz123_headlines(html: str, page_url: str) -> list[Amz123Headline]:
     parser = _LinkParser(base_url=page_url)
     parser.feed(html)
-    headlines: list[Amz123Headline] = []
+    buckets: dict[int, list[Amz123Headline]] = {1: [], 2: [], 3: [], 4: [], 5: []}
     seen_urls: set[str] = set()
     for title, url in parser.links:
         if url in seen_urls:
             continue
         if not _is_amz123_article_url(url):
             continue
-        if not _is_relevant_title(title):
+        relevance_priority = _title_relevance_priority(title)
+        if relevance_priority is None:
             continue
         seen_urls.add(url)
-        headlines.append(Amz123Headline(title=title, url=url))
-    return headlines
+        buckets[relevance_priority].append(
+            Amz123Headline(title=title, url=url, relevance_priority=relevance_priority)
+        )
+    return [headline for priority in sorted(buckets) for headline in buckets[priority]]
 
 
 class _LinkParser(HTMLParser):
@@ -167,16 +225,70 @@ def _is_amz123_article_url(url: str) -> bool:
 
 
 def _is_relevant_title(title: str) -> bool:
+    return _title_relevance_priority(title) is not None
+
+
+def _title_relevance_priority(title: str) -> int | None:
     lowered = title.lower()
-    if any(keyword.lower() in lowered for keyword in AMZ123_OTHER_PLATFORM_KEYWORDS):
-        return False
-    if any(keyword.lower() in lowered for keyword in AMZ123_NON_NORTH_AMERICA_KEYWORDS):
-        return False
-    return any(keyword.lower() in lowered for keyword in AMZ123_AMAZON_KEYWORDS)
+    has_amazon = _contains_any(lowered, AMZ123_AMAZON_KEYWORDS)
+    has_other_platform = _contains_any(lowered, AMZ123_OTHER_PLATFORM_KEYWORDS)
+    has_non_north_america = _contains_any(lowered, AMZ123_NON_NORTH_AMERICA_KEYWORDS)
+    has_north_america = _contains_any(lowered, AMZ123_NORTH_AMERICA_KEYWORDS)
+    has_us_platform = _contains_any(lowered, AMZ123_US_PLATFORM_KEYWORDS)
+    has_logistics_or_compliance = _contains_any(lowered, AMZ123_LOGISTICS_COMPLIANCE_KEYWORDS)
+
+    if has_amazon and not has_other_platform and not has_non_north_america:
+        return 1
+    if has_amazon and not has_other_platform:
+        return 2
+    if (has_north_america or has_logistics_or_compliance) and not has_other_platform:
+        return 3
+    if has_amazon:
+        return 4
+    if has_other_platform and (has_north_america or has_us_platform):
+        return 5
+    return None
 
 
 def _category_from_title(title: str, fallback: Category) -> Category:
     lowered = title.lower()
     if any(keyword in lowered for keyword in ["amazon", "prime", "fba", "mfn", "亚马逊"]):
         return Category.AMAZON_PLATFORM
+    if any(
+        keyword in lowered
+        for keyword in [
+            "cbp",
+            "cpsc",
+            "customs",
+            "fda",
+            "ftc",
+            "recall",
+            "tariff",
+            "关税",
+            "合规",
+            "海关",
+            "召回",
+        ]
+    ):
+        return Category.POLICY_COMPLIANCE
+    if any(
+        keyword in lowered
+        for keyword in [
+            "fedex",
+            "ups",
+            "usps",
+            "仓储",
+            "港口",
+            "海运",
+            "空运",
+            "物流",
+            "配送",
+            "入库",
+        ]
+    ):
+        return Category.LOGISTICS
     return fallback
+
+
+def _contains_any(text: str, keywords: list[str]) -> bool:
+    return any(keyword.lower() in text for keyword in keywords)

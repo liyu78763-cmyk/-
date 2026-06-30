@@ -2,8 +2,10 @@ name: Cross-border DingTalk Daily
 
 on:
   schedule:
-    # Beijing weekday 10:00. Beijing time is UTC+8 year-round, so 10:00 BJT = 02:00 UTC.
-    - cron: "0 2 * * 1-5"
+    # Beijing weekday 10:00 with fallback attempts through 10:30.
+    # Beijing time is UTC+8 year-round, so 10:00-10:30 BJT = 02:00-02:30 UTC.
+    # The run-key below prevents duplicate sends when more than one attempt runs.
+    - cron: "0,5,10,15,20,25,30 2 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:

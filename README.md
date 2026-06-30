@@ -1,6 +1,6 @@
 # 跨境电商快讯自动推送到钉钉
 
-这是一个完整可运行的 Python 3.12 项目，用于每个工作日北京时间 10:00，在 GitHub Actions 云端采集最近 24 小时跨境电商新闻，硬性排除超过 7 天的旧闻，按热度和来源优先级发送 TOP10；内容不足时按备用策略补位，仍不足则不硬凑。程序会完成过滤、去重、评分和中文快讯生成后，通过钉钉自定义机器人推送到群聊。
+这是一个完整可运行的 Python 3.12 项目，用于每个工作日北京时间 10:00 在 GitHub Actions 云端采集最近 24 小时跨境电商新闻；为降低 GitHub 整点定时延迟或漏触发影响，会在 10:00-10:30 做补偿尝试，并用当天 run-key 防止重复发送。程序会硬性排除超过 7 天的旧闻，按热度和来源优先级发送 TOP10；内容不足时按备用策略补位，仍不足则不硬凑。
 
 ## 功能
 
@@ -85,7 +85,7 @@ python -m crossborder_daily --output data/latest_report.md
 1. 将本项目提交到 GitHub 仓库。
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
-4. 工作流按工作日北京时间 `10:00` 发送；对应 GitHub Actions cron 的 UTC `02:00`。GitHub Actions 可能会有几分钟排队延迟，但会按当天 `run-key` 防止重复发送。
+4. 工作流按工作日北京时间 `10:00-10:30` 补偿尝试发送；对应 GitHub Actions cron 的 UTC `02:00-02:30`。GitHub Actions 可能会有几分钟排队延迟，但会按当天 `run-key` 防止重复发送。
 5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行；`dry_run=false` 会真实发送，`dry_run=true` 只生成报告不发送。
 
 需要配置的 GitHub Secrets：

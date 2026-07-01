@@ -22,6 +22,7 @@ def test_dry_run_end_to_end_does_not_send_or_record_history(tmp_path: Path) -> N
             dry_run=True,
             fixture_path=Path("tests/fixtures/sample_news.json"),
             use_ai=False,
+            include_exchange_rate=False,
             min_high_value_items=1,
         )
     )
@@ -55,6 +56,7 @@ def test_pipeline_rejects_news_older_than_max_age(tmp_path: Path) -> None:
             max_news_age_days=1,
             fixture_path=Path("tests/fixtures/max_age_news.json"),
             use_ai=False,
+            include_exchange_rate=False,
             min_high_value_items=0,
         )
     )
@@ -92,6 +94,7 @@ def test_pipeline_does_not_send_empty_report_after_history_dedupe(
             dry_run=False,
             fixture_path=Path("tests/fixtures/sample_news.json"),
             use_ai=False,
+            include_exchange_rate=False,
             min_high_value_items=1,
         )
     )
@@ -102,6 +105,7 @@ def test_pipeline_does_not_send_empty_report_after_history_dedupe(
             dry_run=False,
             fixture_path=Path("tests/fixtures/sample_news.json"),
             use_ai=False,
+            include_exchange_rate=False,
             min_high_value_items=1,
         )
     )

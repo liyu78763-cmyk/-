@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
+from crossborder_daily.exchange_rate import ExchangeRateQuote
 from crossborder_daily.models import Category, ScoredNews
 from crossborder_daily.time_utils import to_beijing
 
@@ -29,12 +30,19 @@ class ReportMetadata:
     provider_errors: list[str]
 
 
-def format_daily_report(items: list[ScoredNews], metadata: ReportMetadata) -> str:
+def format_daily_report(
+    items: list[ScoredNews],
+    metadata: ReportMetadata,
+    *,
+    exchange_rate: ExchangeRateQuote | None = None,
+) -> str:
     title_date = _compact_title_date(metadata.generated_at)
     lines: list[str] = [
         f"跨境快讯｜{title_date}",
         "",
     ]
+    if exchange_rate:
+        lines.extend(_format_exchange_rate(exchange_rate))
     if not items:
         lines.extend(
             [
@@ -45,6 +53,15 @@ def format_daily_report(items: list[ScoredNews], metadata: ReportMetadata) -> st
     else:
         lines.extend(_format_news_sections(items))
     return "\n".join(lines).strip() + "\n"
+
+
+def _format_exchange_rate(exchange_rate: ExchangeRateQuote) -> list[str]:
+    return [
+        "今日汇率：",
+        f"1美元={exchange_rate.usd_cny}人民币",
+        f"来源：{exchange_rate.source_name}｜[查看原文]({exchange_rate.source_url})",
+        "",
+    ]
 
 
 def _format_news_sections(items: list[ScoredNews]) -> list[str]:

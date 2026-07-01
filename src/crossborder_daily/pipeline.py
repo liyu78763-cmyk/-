@@ -10,6 +10,7 @@ from crossborder_daily.ai_client import maybe_polish_report
 from crossborder_daily.config import RuntimePaths
 from crossborder_daily.dedupe import dedupe_items
 from crossborder_daily.dingtalk import DingTalkClient, dingtalk_config_from_env
+from crossborder_daily.exchange_rate import ExchangeRateQuote, fetch_pbc_usd_cny_rate
 from crossborder_daily.filters import filter_news_items
 from crossborder_daily.history import HistoryStore
 from crossborder_daily.http_client import HttpClient
@@ -34,6 +35,7 @@ class RunOptions:
     amz123_items: int = 5
     min_high_value_items: int = 0
     use_ai: bool = True
+    include_exchange_rate: bool = True
     fixture_path: Path | None = None
     run_key: str | None = None
 
@@ -80,6 +82,7 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
         options=options,
     )
     selected = _select_report_items(selected, options=options)
+    exchange_rate = _fetch_exchange_rate(http_client) if options.include_exchange_rate else None
 
     metadata = ReportMetadata(
         generated_at=generated_at,
@@ -89,8 +92,8 @@ def run_pipeline(options: RunOptions) -> PipelineResult:
         rejected_count=len(rejected),
         provider_errors=provider_errors,
     )
-    draft = format_daily_report(selected, metadata)
-    facts = _facts_payload(selected, metadata)
+    draft = format_daily_report(selected, metadata, exchange_rate=exchange_rate)
+    facts = _facts_payload(selected, metadata, exchange_rate)
     report = maybe_polish_report(
         use_ai=options.use_ai,
         prompt_path=options.paths.prompt_path,
@@ -201,6 +204,14 @@ def _collect_and_score(
     return fresh, filtered.rejected, provider_errors
 
 
+def _fetch_exchange_rate(http_client: HttpClient) -> ExchangeRateQuote | None:
+    try:
+        return fetch_pbc_usd_cny_rate(http_client)
+    except Exception as exc:
+        LOGGER.warning("Exchange-rate source failed and was skipped: %s", redact_text(str(exc)))
+        return None
+
+
 def _select_report_items(items: list[ScoredNews], *, options: RunOptions) -> list[ScoredNews]:
     amazon_items = [item for item in items if _source_bucket(item) == "amazon"]
     amz123_primary_items = [
@@ -265,10 +276,26 @@ def _take_until(items: list[ScoredNews], *, limit: int) -> list[ScoredNews]:
     return items[:limit]
 
 
-def _facts_payload(items: list[ScoredNews], metadata: ReportMetadata) -> dict[str, Any]:
+def _facts_payload(
+    items: list[ScoredNews],
+    metadata: ReportMetadata,
+    exchange_rate: ExchangeRateQuote | None,
+) -> dict[str, Any]:
     return {
         "window_hours": metadata.window_hours,
         "generated_at": metadata.generated_at.isoformat(),
+        "exchange_rate": (
+            {
+                "usd_cny": exchange_rate.usd_cny,
+                "source": exchange_rate.source_name,
+                "source_url": exchange_rate.source_url,
+                "published_date": exchange_rate.published_date.isoformat()
+                if exchange_rate.published_date
+                else None,
+            }
+            if exchange_rate
+            else None
+        ),
         "items": [
             {
                 "title": scored.item.title,

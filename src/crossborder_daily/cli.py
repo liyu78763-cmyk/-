@@ -67,6 +67,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional once-only key for scheduled cloud sends.",
     )
     parser.add_argument("--no-ai", action="store_true", help="Disable optional AI polishing.")
+    parser.add_argument(
+        "--no-exchange-rate",
+        action="store_true",
+        help="Skip the PBC USD/CNY exchange-rate block.",
+    )
     parser.add_argument("--log-level", default=os.getenv("LOG_LEVEL", "INFO"))
     return parser
 
@@ -94,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         amz123_items=int(args.amz123_items),
         min_high_value_items=int(args.min_high_value_items),
         use_ai=not bool(args.no_ai),
+        include_exchange_rate=not bool(args.no_exchange_rate),
         fixture_path=args.fixture,
         run_key=args.run_key,
     )

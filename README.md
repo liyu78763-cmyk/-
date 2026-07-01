@@ -7,6 +7,7 @@
 - 默认覆盖 Amazon 美国站、FBA、Amazon Ads、CPSC/FDA/FTC/CBP/USTR、USPS/UPS/FedEx、Walmart Marketplace、TikTok Shop US、Temu、eBay 等主题。
 - 默认数据源包括官方 RSS 与 GDELT 新闻搜索；新闻搜索层通过 `NewsProvider` 接口可替换。
 - 已接入 AMZ123 跨境早报作为 C 级行业线索来源，优先补充亚马逊和北美相关内容；CPSC/召回类 AMZ123 内容允许进入快讯但仍显示 AMZ123 来源，官方 CPSC 来源抓到时优先级更高。
+- 标题下方会显示“今日汇率”，每日从中国人民银行“人民币汇率中间价公告”栏目提取 `1美元对人民币` 中间价；汇率源失败时跳过该块，不影响新闻发送。
 - 使用 SQLite 保存已推送 URL 与事件指纹，7 天内不重复推送，30 天后自动清理。
 - 即使搜索窗口被调宽，超过 7 天的新闻也会被过滤。
 - 支持钉钉机器人加签。
@@ -120,6 +121,12 @@ python -m pytest
 
 ```bash
 python -m crossborder_daily --dry-run --fixture tests/fixtures/sample_news.json --output data/latest_report.md --no-ai
+```
+
+测试时不访问人民银行汇率页：
+
+```bash
+python -m crossborder_daily --dry-run --fixture tests/fixtures/sample_news.json --output data/latest_report.md --no-ai --no-exchange-rate
 ```
 
 ## 常见错误

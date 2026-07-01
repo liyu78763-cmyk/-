@@ -103,4 +103,7 @@ def _polished_report_is_safe(report: str, facts: dict[str, Any]) -> bool:
     if "跨境快讯" not in report:
         return False
     urls = [str(item["url"]) for item in cast(list[dict[str, Any]], facts.get("items", []))]
+    exchange_rate = facts.get("exchange_rate")
+    if isinstance(exchange_rate, dict) and exchange_rate.get("source_url"):
+        urls.append(str(exchange_rate["source_url"]))
     return all(url in report for url in urls)

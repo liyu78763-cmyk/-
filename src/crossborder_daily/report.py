@@ -57,8 +57,8 @@ def format_daily_report(
 
 def _format_exchange_rate(exchange_rate: ExchangeRateQuote) -> list[str]:
     return [
-        "今日汇率：",
-        f"1美元={exchange_rate.usd_cny}人民币",
+        "今日汇率：  ",
+        f"1美元={exchange_rate.usd_cny}人民币  ",
         f"来源：{exchange_rate.source_name}｜[查看原文]({exchange_rate.source_url})",
         "",
     ]
@@ -80,8 +80,7 @@ def _format_news_sections(items: list[ScoredNews]) -> list[str]:
 def _format_single_news(scored: ScoredNews, number: int) -> list[str]:
     item = scored.item
     return [
-        f"{number}.{item.title}",
-        "",
+        f"{number}.{item.title}  ",
         f"来源：{_source_label(item.source_name)}｜[查看原文]({item.url})",
         "",
     ]

@@ -31,5 +31,6 @@ def test_report_places_exchange_rate_before_first_news() -> None:
 
     report = format_daily_report([item], metadata, exchange_rate=quote)
 
-    assert "今日汇率：\n1美元=6.8067人民币\n来源：中国人民银行" in report
+    assert "今日汇率：  \n1美元=6.8067人民币  \n来源：中国人民银行" in report
     assert report.index("今日汇率：") < report.index("1.Amazon US seller update")
+    assert "1.Amazon US seller update  \n来源：Amazon" in report

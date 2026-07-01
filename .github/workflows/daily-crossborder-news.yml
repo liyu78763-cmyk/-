@@ -49,6 +49,12 @@ jobs:
           BEIJING_DATE="$(TZ=Asia/Shanghai date +'%Y-%m-%d')"
           echo "Asia/Shanghai time: ${BEIJING_TIME}, weekday: ${BEIJING_DAY}"
 
+          if [[ "${BEIJING_DATE}" == "2026-07-01" ]]; then
+            echo "RUN_BRIEFING=false" >> "$GITHUB_ENV"
+            echo "Briefing was sent manually on 2026-07-01; skipping scheduled duplicate."
+            exit 0
+          fi
+
           if [[ "${BEIJING_DAY}" -ge 1 && "${BEIJING_DAY}" -le 5 ]]; then
             echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
             echo "BRIEFING_RUN_KEY=bjt-${BEIJING_DATE}" >> "$GITHUB_ENV"

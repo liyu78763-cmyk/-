@@ -1,6 +1,6 @@
 # 跨境电商快讯自动推送到钉钉
 
-这是一个完整可运行的 Python 3.12 项目，用于每个工作日北京时间 10:07 在 GitHub Actions 云端采集最近 24 小时跨境电商新闻；为降低 GitHub 整点定时延迟或漏触发影响，会在 10:07-10:32 做错峰补偿尝试，并用当天 run-key 防止重复发送。程序会硬性排除超过 7 天的旧闻，按热度和来源优先级发送 TOP10；内容不足时按备用策略补位，仍不足则不硬凑。
+这是一个完整可运行的 Python 3.12 项目，用于每个工作日北京时间 10:30 通过 Cloudflare Worker 触发 GitHub Actions，采集最近 24 小时跨境电商新闻并推送钉钉；GitHub Actions 自带 schedule 会在 10:35-10:55 做后备补偿，并用当天 run-key 防止重复发送。程序会硬性排除超过 7 天的旧闻，按热度和来源优先级发送 TOP10；内容不足时按备用策略补位，仍不足则不硬凑。
 
 ## 功能
 
@@ -86,7 +86,7 @@ python -m crossborder_daily --output data/latest_report.md
 1. 将本项目提交到 GitHub 仓库。
 2. 在仓库 `Settings -> Secrets and variables -> Actions -> New repository secret` 添加密钥。
 3. 确认 `.github/workflows/daily-crossborder-news.yml` 已存在。
-4. 工作流按工作日北京时间 `10:07-10:32` 错峰补偿尝试发送；对应 GitHub Actions cron 的 UTC `02:07-02:32`。GitHub Actions 可能会有几分钟排队延迟，但会按当天 `run-key` 防止重复发送。
+4. Cloudflare Worker 按工作日北京时间 `10:30` 触发 GitHub Actions；GitHub Actions 自带 schedule 在 `10:35-10:55` 后备补偿。GitHub Actions 可能会有几分钟排队延迟，但会按当天 `run-key` 防止重复发送。
 5. 可在 `Actions -> Cross-border DingTalk Daily` 手动运行；`dry_run=false` 会真实发送，`dry_run=true` 只生成报告不发送。
 
 ### 备用触发方案
@@ -99,7 +99,7 @@ python -m crossborder_daily --output data/latest_report.md
 cloudflare/github-dispatch-worker/
 ```
 
-按该目录下的 README 部署后，它会在工作日北京时间 10:40 自动触发 GitHub Actions。
+按该目录下的 README 部署后，它会在工作日北京时间 10:30 自动触发 GitHub Actions。
 
 调用地址：
 

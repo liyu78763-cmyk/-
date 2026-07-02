@@ -93,6 +93,14 @@ python -m crossborder_daily --output data/latest_report.md
 
 如果需要比 GitHub `schedule` 更稳定的触发方式，可以使用外部定时器在工作日北京时间 10:10 或 10:20 调用 GitHub `workflow_dispatch` API。发送逻辑仍在 GitHub Actions 内执行，钉钉 Webhook 和加签密钥仍只放在 GitHub Secrets。
 
+本仓库已提供 Cloudflare Worker 备用触发器：
+
+```text
+cloudflare/github-dispatch-worker/
+```
+
+按该目录下的 README 部署后，它会在工作日北京时间 10:40 自动触发 GitHub Actions。
+
 调用地址：
 
 ```text

@@ -15,3 +15,6 @@ dist/
 build/
 *.egg-info/
 *.zip
+node_modules/
+.wrangler/
+.dev.vars

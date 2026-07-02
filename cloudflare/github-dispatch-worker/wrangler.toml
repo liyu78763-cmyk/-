@@ -1,0 +1,14 @@
+name = "crossborder-github-dispatch"
+main = "src/index.js"
+compatibility_date = "2026-07-02"
+
+[vars]
+GITHUB_OWNER = "liyu78763-cmyk"
+GITHUB_REPO = "-"
+GITHUB_WORKFLOW = "daily-crossborder-news.yml"
+GITHUB_REF = "main"
+DRY_RUN = "false"
+
+[triggers]
+# UTC 02:40 = Beijing 10:40. Monday-Friday only.
+crons = ["40 2 * * 1-5"]

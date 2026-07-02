@@ -10,5 +10,5 @@ GITHUB_REF = "main"
 DRY_RUN = "false"
 
 [triggers]
-# UTC 02:30 = Beijing 10:30. Monday-Friday only.
-crons = ["30 2 * * 1-5"]
+# UTC 02:00 = Beijing 10:00. Monday-Friday only.
+crons = ["0 2 * * 1-5"]

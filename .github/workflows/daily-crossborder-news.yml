@@ -2,10 +2,11 @@ name: Cross-border DingTalk Daily
 
 on:
   schedule:
-    # Beijing weekday 10:00 with fallback attempts through 10:30.
-    # Beijing time is UTC+8 year-round, so 10:00-10:30 BJT = 02:00-02:30 UTC.
+    # Beijing weekday 10:07 with fallback attempts through 10:32.
+    # Beijing time is UTC+8 year-round, so 10:07-10:32 BJT = 02:07-02:32 UTC.
+    # Non-zero minutes avoid GitHub Actions top-of-hour schedule congestion.
     # The run-key below prevents duplicate sends when more than one attempt runs.
-    - cron: "0,5,10,15,20,25,30 2 * * 1-5"
+    - cron: "7,12,17,22,27,32 2 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -38,20 +39,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" != "schedule" ]]; then
-            echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
-            echo "Manual workflow run; continuing."
-            exit 0
-          fi
-
           BEIJING_TIME="$(TZ=Asia/Shanghai date +'%H:%M')"
           BEIJING_DAY="$(TZ=Asia/Shanghai date +'%u')"
           BEIJING_DATE="$(TZ=Asia/Shanghai date +'%Y-%m-%d')"
           echo "Asia/Shanghai time: ${BEIJING_TIME}, weekday: ${BEIJING_DAY}"
 
-          if [[ "${BEIJING_DATE}" == "2026-07-01" ]]; then
-            echo "RUN_BRIEFING=false" >> "$GITHUB_ENV"
-            echo "Briefing was sent manually on 2026-07-01; skipping scheduled duplicate."
+          if [[ "${{ github.event_name }}" != "schedule" ]]; then
+            echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
+            echo "BRIEFING_RUN_KEY=bjt-${BEIJING_DATE}" >> "$GITHUB_ENV"
+            echo "Manual workflow run; continuing."
             exit 0
           fi
 

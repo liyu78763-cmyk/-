@@ -12,7 +12,7 @@ def test_history_blocks_recently_sent_url(tmp_path: Path) -> None:
 
     with HistoryStore(tmp_path / "history.sqlite") as history:
         assert not history.seen_recent(scored, days=7)
-        history.record_sent([scored], sent_at=bjt())
+        history.record_sent([scored])
         assert history.seen_recent(scored, days=7)
 
 

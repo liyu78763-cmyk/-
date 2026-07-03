@@ -1,6 +1,7 @@
 name = "github-action-trigger"
 main = "src/index.js"
 compatibility_date = "2026-07-02"
+workers_dev = false
 
 [vars]
 GITHUB_OWNER = "liyu78763-cmyk"
@@ -10,5 +11,5 @@ GITHUB_REF = "main"
 DRY_RUN = "false"
 
 [triggers]
-# UTC 02:00 = Beijing 10:00. Monday-Friday only.
-crons = ["0 2 * * 1-5"]
+# UTC 02:00 = 北京时间工作日 10:00
+crons = ["0 2 * * MON-FRI"]

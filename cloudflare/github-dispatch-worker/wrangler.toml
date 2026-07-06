@@ -2,6 +2,7 @@ name = "github-action-trigger"
 main = "src/index.js"
 compatibility_date = "2026-07-02"
 workers_dev = true
+keep_vars = true
 
 [vars]
 GITHUB_OWNER = "liyu78763-cmyk"

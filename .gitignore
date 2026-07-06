@@ -16,5 +16,6 @@ build/
 *.egg-info/
 *.zip
 node_modules/
+.pnpm-store/
 .wrangler/
 .dev.vars

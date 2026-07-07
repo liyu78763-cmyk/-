@@ -51,12 +51,12 @@ jobs:
             exit 0
           fi
 
-          if [[ "${BEIJING_DAY}" -ge 1 && "${BEIJING_DAY}" -le 5 ]]; then
+          if [[ "${BEIJING_DAY}" -ge 1 && "${BEIJING_DAY}" -le 5 && "${BEIJING_TIME}" == 10:* ]]; then
             echo "RUN_BRIEFING=true" >> "$GITHUB_ENV"
             echo "BRIEFING_RUN_KEY=bjt-${BEIJING_DATE}" >> "$GITHUB_ENV"
           else
             echo "RUN_BRIEFING=false" >> "$GITHUB_ENV"
-            echo "Not a Beijing weekday; skipping send."
+            echo "Not within the Beijing weekday 10:00-10:59 window; skipping send."
           fi
 
       - name: Checkout

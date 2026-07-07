@@ -1,7 +1,8 @@
 name = "github-action-trigger"
 main = "src/index.js"
 compatibility_date = "2026-07-02"
-workers_dev = true
+# This Worker only runs from cron triggers, so it does not need a workers.dev URL.
+workers_dev = false
 keep_vars = true
 
 [vars]
